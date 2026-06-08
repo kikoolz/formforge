@@ -1,49 +1,72 @@
-import { PDFDocument, rgb, StandardFonts, PDFPage } from 'pdf-lib'
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
+
+interface FieldWithPosition {
+  label: string
+  page_x: number | null
+  page_y: number | null
+  page: number
+}
 
 export async function generateFilledPdf(
   originalPdfUrl: string,
-  submissionData: Record<string, string>
+  submissionData: Record<string, string>,
+  fieldsWithPositions: FieldWithPosition[]
 ): Promise<Uint8Array> {
-
-  // 1. Download original PDF
   const existingPdfBytes = await fetch(originalPdfUrl).then(r => r.arrayBuffer())
-
-  // 2. Load into pdf-lib
   const pdfDoc = await PDFDocument.load(existingPdfBytes)
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-
   const pages = pdfDoc.getPages()
-  const page = pages[0]
-  const { height } = page.getSize()
 
-  // 3. Write answers onto the PDF
-  // We position them starting from top, going down
-  let yPosition = height - 120
-  const lineHeight = 25
-  const xPosition = 150
+  for (const field of fieldsWithPositions) {
+    const value = submissionData[field.label]
+    if (!value || value.startsWith('data:image')) continue
 
-  Object.entries(submissionData).forEach(([label, value]) => {
-    // Skip signature data URLs and empty values
-    if (!value || value.startsWith('data:image')) return
+    const pageIndex = (field.page || 1) - 1
+    const page = pages[pageIndex]
+    if (!page) continue
 
-    // Write the value on the page
-    page.drawText(String(value), {
-      x: xPosition,
-      y: yPosition,
-      size: 11,
-      font,
-      color: rgb(0, 0, 0),
-      maxWidth: 400,
-    })
+    const { height } = page.getSize()
 
-    yPosition -= lineHeight
-
-    // If we go off the page, add a new page
-    if (yPosition < 50) {
-      yPosition = height - 80
+    if (field.page_x !== null && field.page_y !== null) {
+      page.drawText(String(value).slice(0, 100), {
+        x: field.page_x,
+        y: height - field.page_y - 12,
+        size: 11,
+        font,
+        color: rgb(0, 0, 0),
+        maxWidth: 300,
+      })
     }
-  })
+  }
 
-  // 4. Return as bytes
+  const hasPositions = fieldsWithPositions.some(
+    f => f.page_x !== null && f.page_y !== null
+  )
+
+  if (!hasPositions) {
+    const summaryPage = pdfDoc.addPage()
+    const { height } = summaryPage.getSize()
+    let y = height - 60
+
+    summaryPage.drawText('Submission Summary', {
+      x: 50, y,
+      size: 16, font,
+      color: rgb(0.2, 0.2, 0.8),
+    })
+    y -= 30
+
+    for (const [label, value] of Object.entries(submissionData)) {
+      if (!value || value.startsWith('data:image')) continue
+      summaryPage.drawText(`${label}: ${String(value).slice(0, 80)}`, {
+        x: 50, y,
+        size: 11, font,
+        color: rgb(0, 0, 0),
+        maxWidth: 500,
+      })
+      y -= 22
+      if (y < 60) break
+    }
+  }
+
   return pdfDoc.save()
 }

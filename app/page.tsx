@@ -88,7 +88,7 @@ const FAQ = [
   { q: 'How accurate is the AI field detection?', a: 'Claude correctly identifies 95%+ of fields on standard business PDFs. You can edit any field afterward in the editor — change type, mark required, reorder, or delete.' },
   { q: 'Can my respondents fill forms on mobile?', a: 'Yes. Every form is fully responsive and works down to 375px wide. Signature capture, file upload, and all field types are touch-optimized.' },
   { q: 'What happens to my original PDF?', a: 'We store it securely in private storage so we can generate filled copies. Only you can access it. Delete the form and the PDF goes with it.' },
-  { q: 'Do you support scanned PDFs?', a: 'Yes. If text extraction fails, we run OCR (Tesseract) page-by-page before sending to the AI.' },
+  { q: 'Do you support scanned PDFs?', a: 'Yes. If text extraction fails, we run OCR (OCR.space) page-by-page before sending to the AI.' },
   { q: 'Can I embed forms on my own site?', a: 'On Professional and Team plans you get an iframe embed snippet alongside the public link and QR code.' },
   { q: 'Is there an API?', a: 'API access is on the roadmap for Team plan customers. Contact us if you need it sooner.' },
 ]

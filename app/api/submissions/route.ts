@@ -1,3 +1,23 @@
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const windowMs = 15 * 60 * 1000
+  const limit = 10
+
+  const entry = rateLimitMap.get(ip)
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + windowMs })
+    return false
+  }
+
+  if (entry.count >= limit) return true
+
+  entry.count++
+  return false
+}
+
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
@@ -5,6 +25,14 @@ import { generateFilledPdf } from '@/lib/pdf'
 import { sendSubmissionNotification } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: 'Too many submissions. Please try again later.', code: 'RATE_LIMITED' },
+      { status: 429 }
+    )
+  }
+
   const { form_id, data } = await request.json()
 
   // 1. Get the form (verify it exists and is published)
@@ -33,12 +61,17 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // 3. Generate filled PDF
+  // 3. Generate filled PDF with field positions
   let pdfUrl: string | null = null
 
   if (form.original_pdf_url) {
     try {
-      const pdfBytes = await generateFilledPdf(form.original_pdf_url, data)
+      const { data: fields } = await supabaseAdmin
+        .from('form_fields')
+        .select('label, page_x, page_y, page')
+        .eq('form_id', form_id)
+
+      const pdfBytes = await generateFilledPdf(form.original_pdf_url, data, fields || [])
       const fileName = `filled/${form_id}/${crypto.randomUUID()}.pdf`
 
       const { data: uploadData } = await supabaseAdmin.storage
@@ -53,7 +86,6 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       console.error('PDF generation failed:', err)
-      // Continue even if PDF gen fails
     }
   }
 
@@ -63,7 +95,7 @@ export async function POST(request: NextRequest) {
   )?.[1] as string || null
 
   // 5. Get IP address
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || null
+  const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] || null
 
   // 6. Save submission to database
   const { data: submission, error: subError } = await supabaseAdmin
@@ -73,7 +105,7 @@ export async function POST(request: NextRequest) {
       respondent_email: respondentEmail,
       data,
       pdf_url: pdfUrl,
-      ip_address: ip,
+      ip_address: ipAddress,
     })
     .select()
     .single()

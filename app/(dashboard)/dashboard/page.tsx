@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Sidebar from "@/components/dashboard/Sidebar";
+import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 import FormForgeLogo from "@/components/FormForgeLogo";
 import type { User as AppUser } from "@/types";
 
@@ -342,11 +343,7 @@ export default function DashboardPage() {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
-                {[0, 1, 2, 3, 4, 5].map((item) => (
-                  <Skeleton key={item} className="h-44 rounded-xl" />
-                ))}
-              </div>
+              <DashboardSkeleton />
             ) : filteredForms.length === 0 ? (
               <div className="flex min-h-[452px] flex-col items-center justify-center rounded-xl glass px-6 py-20 text-center">
                 <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
