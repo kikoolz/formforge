@@ -1,26 +1,245 @@
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
 @import "tailwindcss";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light mode is supported, but FormForge defaults to a dark luxury feel. */
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(240 10% 4%);
+
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(240 10% 4%);
+
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(240 10% 4%);
+
+  --primary: hsl(239 84% 67%);
+  --primary-foreground: hsl(0 0% 100%);
+  --primary-glow: hsl(252 87% 73%);
+
+  --secondary: hsl(240 5% 96%);
+  --secondary-foreground: hsl(240 10% 4%);
+
+  --muted: hsl(240 5% 96%);
+  --muted-foreground: hsl(240 4% 46%);
+
+  --accent: hsl(240 5% 96%);
+  --accent-foreground: hsl(240 10% 4%);
+
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  --success: hsl(142 71% 45%);
+  --success-foreground: hsl(0 0% 100%);
+
+  --warning: hsl(38 92% 50%);
+  --warning-foreground: hsl(0 0% 100%);
+
+  --border: hsl(240 5% 82%);
+  --input: hsl(240 5% 84%);
+  --ring: hsl(239 84% 67%);
+
+  --radius: 0.625rem;
+
+  --chart-1: hsl(239 84% 67%);
+  --chart-2: hsl(252 87% 73%);
+  --chart-3: hsl(142 71% 45%);
+  --chart-4: hsl(38 92% 50%);
+  --chart-5: hsl(0 84% 60%);
+
+  --sidebar: hsl(240 6% 98%);
+  --sidebar-foreground: hsl(240 5% 35%);
+  --sidebar-primary: hsl(239 84% 67%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 5% 94%);
+  --sidebar-accent-foreground: hsl(240 10% 4%);
+  --sidebar-border: hsl(240 6% 90%);
+  --sidebar-ring: hsl(239 84% 67%);
+}
+
+.dark {
+  /* Deep dark luxury — not pure black. */
+  --background: hsl(240 14% 5%);
+  --foreground: hsl(240 6% 92%);
+
+  --card: hsl(240 12% 7%);
+  --card-foreground: hsl(240 6% 92%);
+
+  --popover: hsl(240 12% 8%);
+  --popover-foreground: hsl(240 6% 92%);
+
+  --primary: hsl(239 84% 67%);
+  --primary-foreground: hsl(0 0% 100%);
+  --primary-glow: hsl(252 87% 73%);
+
+  --secondary: hsl(240 8% 12%);
+  --secondary-foreground: hsl(240 6% 92%);
+
+  --muted: hsl(240 8% 11%);
+  --muted-foreground: hsl(240 5% 55%);
+
+  --accent: hsl(240 8% 14%);
+  --accent-foreground: hsl(240 6% 95%);
+
+  --destructive: hsl(0 72% 56%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  --success: hsl(152 76% 50%);
+  --success-foreground: hsl(0 0% 100%);
+
+  --warning: hsl(38 100% 60%);
+  --warning-foreground: hsl(240 14% 5%);
+
+  --border: hsl(240 6% 16%);
+  --input: hsl(240 6% 16%);
+  --ring: hsl(239 84% 67%);
+
+  --chart-1: hsl(239 84% 67%);
+  --chart-2: hsl(252 87% 73%);
+  --chart-3: hsl(152 76% 50%);
+  --chart-4: hsl(38 100% 60%);
+  --chart-5: hsl(0 72% 56%);
+
+  --sidebar: hsl(240 14% 4%);
+  --sidebar-foreground: hsl(240 5% 60%);
+  --sidebar-primary: hsl(239 84% 67%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 8% 10%);
+  --sidebar-accent-foreground: hsl(240 6% 95%);
+  --sidebar-border: hsl(240 6% 14%);
+  --sidebar-ring: hsl(239 84% 67%);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-glow: var(--primary-glow);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "DM Sans", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-heading: "Bricolage Grotesque", "DM Sans", sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    background-color: var(--background);
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    @apply tracking-tight;
+    font-feature-settings: "ss02";
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .glass {
+    background-color: color-mix(in oklab, var(--card) 60%, transparent);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid color-mix(in oklab, var(--border) 55%, transparent);
+  }
+
+  .glass-strong {
+    background-color: color-mix(in oklab, var(--card) 80%, transparent);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  }
+
+  .bg-mesh {
+    background-image:
+      radial-gradient(circle at 20% 0%, hsl(239 84% 67% / 0.18), transparent 45%),
+      radial-gradient(circle at 80% 10%, hsl(252 87% 73% / 0.14), transparent 50%),
+      radial-gradient(circle at 50% 100%, hsl(239 84% 67% / 0.1), transparent 55%);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, var(--foreground) 0%, var(--primary-glow) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .shadow-elegant {
+    box-shadow:
+      0 1px 0 0 hsl(0 0% 100% / 0.04) inset,
+      0 20px 40px -20px hsl(239 84% 30% / 0.4),
+      0 0 0 1px hsl(0 0% 100% / 0.04);
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 40px hsl(239 84% 67% / 0.35);
+  }
 }
