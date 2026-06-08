@@ -172,12 +172,21 @@ export default function LandingPage() {
 
             {/* CTAs */}
             <div className="mt-10 flex items-center justify-center gap-3">
-              <Link href="/signup">
-                <button className="group inline-flex items-center gap-2 px-6 h-12 rounded-md bg-primary text-primary-foreground font-medium text-[14px] shadow-glow hover:opacity-90 transition-all">
-                  Start free
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </button>
-              </Link>
+              {user ? (
+                <Link href="/dashboard">
+                  <button className="group inline-flex items-center gap-2 px-6 h-12 rounded-md bg-primary text-primary-foreground font-medium text-[14px] shadow-glow hover:opacity-90 transition-all">
+                    Continue to FormForge
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                </Link>
+              ) : (
+                <Link href="/signup">
+                  <button className="group inline-flex items-center gap-2 px-6 h-12 rounded-md bg-primary text-primary-foreground font-medium text-[14px] shadow-glow hover:opacity-90 transition-all">
+                    Start free
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                </Link>
+              )}
               <a
                 href="#features"
                 className="inline-flex items-center gap-2 px-6 h-12 rounded-md glass text-[14px] hover:bg-card transition-colors"
@@ -505,12 +514,21 @@ export default function LandingPage() {
           <p className="mt-4 text-[15px] text-muted-foreground">
             Free forever for your first 3 forms. No credit card required.
           </p>
-          <Link href="/signup">
-            <button className="mt-8 inline-flex items-center gap-2 px-6 h-12 rounded-md bg-primary text-primary-foreground font-medium text-[14px] shadow-glow hover:opacity-90 transition-all">
-              Get started
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </Link>
+          {user ? (
+            <Link href="/dashboard">
+              <button className="mt-8 inline-flex items-center gap-2 px-6 h-12 rounded-md bg-primary text-primary-foreground font-medium text-[14px] shadow-glow hover:opacity-90 transition-all">
+                Go to Dashboard
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </Link>
+          ) : (
+            <Link href="/signup">
+              <button className="mt-8 inline-flex items-center gap-2 px-6 h-12 rounded-md bg-primary text-primary-foreground font-medium text-[14px] shadow-glow hover:opacity-90 transition-all">
+                Get started
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </Link>
+          )}
         </div>
       </section>
 
