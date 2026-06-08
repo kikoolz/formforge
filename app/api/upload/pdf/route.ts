@@ -180,12 +180,14 @@ export async function POST(request: NextRequest) {
 
 function sanitizeText(text: string): string {
   return text
-    .replace(/[\w\-./:\\]+\.(png|jpg|jpeg|gif|bmp|svg|webp|ico)/gi, '')
-    .replace(/data:image\/[^;]+;base64[^"]+/gi, '')
-    .replace(/["']?[\w\-./\\]+\.(png|jpg|jpeg|gif|bmp|svg|webp|ico)["']?/gi, '')
+    .replace(/\b[\w\-]+\.(png|jpg|jpeg|gif|bmp|svg|webp|ico)\b/gi, '')
+    .replace(/["']?[\w\-./\\]*[\w\-]+\.(png|jpg|jpeg|gif|bmp|svg|webp|ico)["']?/gi, '')
+    .replace(/data:image\/[^;"'\s]+;base64[^;"'\s]+/gi, '')
+    .replace(/image\/(png|jpeg|jpg|gif|svg|webp|bmp|x-icon|x-png)/gi, '')
     .replace(/\bfigure\s+\d+\b/gi, '')
-    .replace(/\bimage\b/gi, '')
-    .replace(/\bphoto\b/gi, '')
+    .replace(/\b(image|photo|picture|screenshot)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 const AI_MODELS = [
