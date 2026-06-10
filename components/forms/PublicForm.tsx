@@ -1,14 +1,40 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import confetti from 'canvas-confetti'
 import SignatureCanvas from 'react-signature-canvas'
-import type { Form, FormField } from '@/types'
+import type { Form, FormField, FormCondition, ConditionOperator } from '@/types'
 import InteractivePdfViewer from './InteractivePdfViewer'
 
 interface Props {
-  form: Form & { form_fields: FormField[] }
+  form: Form & { form_fields: FormField[]; form_conditions?: FormCondition[] }
+}
+
+function evaluateCondition(
+  condition: FormCondition,
+  allValues: Record<string, any>,
+): boolean {
+  const sourceVal = String(allValues[condition.source_field_id] ?? '')
+
+  switch (condition.operator as ConditionOperator) {
+    case 'equals':
+      return sourceVal === condition.value
+    case 'not_equals':
+      return sourceVal !== condition.value
+    case 'contains':
+      return sourceVal.toLowerCase().includes(condition.value.toLowerCase())
+    case 'greater_than':
+      return Number(sourceVal) > Number(condition.value)
+    case 'less_than':
+      return Number(sourceVal) < Number(condition.value)
+    case 'is_empty':
+      return !sourceVal || sourceVal === ''
+    case 'is_not_empty':
+      return !!sourceVal && sourceVal !== ''
+    default:
+      return true
+  }
 }
 
 export default function PublicForm({ form }: Props) {
@@ -18,14 +44,37 @@ export default function PublicForm({ form }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const sigRefs = useRef<Record<string, SignatureCanvas | null>>({})
 
+  const conditions = form.form_conditions || []
   const fields = form.form_fields
 
+  // Evaluate which fields are visible / required / readonly
+  const fieldStates = useMemo(() => {
+    const hidden = new Set<string>()
+    const readonly = new Set<string>()
+    const requiredOverride = new Set<string>()
+
+    for (const condition of conditions) {
+      const matches = evaluateCondition(condition, values)
+      if (!matches) continue
+
+      if (condition.action === 'hide') hidden.add(condition.target_field_id)
+      if (condition.action === 'show') hidden.delete(condition.target_field_id)
+      if (condition.action === 'make_readonly') readonly.add(condition.target_field_id)
+      if (condition.action === 'require') requiredOverride.add(condition.target_field_id)
+    }
+
+    return { hidden, readonly, requiredOverride }
+  }, [conditions, values])
+
+  // Filter out hidden fields for progress
+  const visibleFields = fields.filter(f => !fieldStates.hidden.has(f.id))
+
   // Progress = fields with a non-empty value
-  const filledCount = fields.filter(f => {
+  const filledCount = visibleFields.filter(f => {
     const val = values[f.id]
     return val !== undefined && val !== '' && val !== false
   }).length
-  const progress = Math.round((filledCount / fields.length) * 100)
+  const progress = Math.round((filledCount / visibleFields.length) * 100)
 
   function setValue(fieldId: string, value: any) {
     setValues(prev => ({ ...prev, [fieldId]: value }))
@@ -37,7 +86,9 @@ export default function PublicForm({ form }: Props) {
   function validate(): boolean {
     const newErrors: Record<string, string> = {}
     fields.forEach(field => {
-      if (field.required) {
+      if (fieldStates.hidden.has(field.id)) return
+      const isRequired = field.required || fieldStates.requiredOverride.has(field.id)
+      if (isRequired) {
         const val = values[field.id]
         if (val === undefined || val === '' || val === false) {
           newErrors[field.id] = `${field.label} is required`
@@ -59,6 +110,7 @@ export default function PublicForm({ form }: Props) {
     // Build submission data: { "Full Name": "John Smith", ... }
     const submissionData: Record<string, any> = {}
     fields.forEach(field => {
+      if (fieldStates.hidden.has(field.id)) return
       if (field.field_type === 'signature') {
         submissionData[field.label] = sigRefs.current[field.id]?.toDataURL() || ''
       } else {
@@ -155,7 +207,7 @@ export default function PublicForm({ form }: Props) {
         <>
           <InteractivePdfViewer
             pdfUrl={form.original_pdf_url}
-            fields={fields}
+            fields={visibleFields}
             mode="fill"
             values={values}
             onChange={setValue}
@@ -189,7 +241,7 @@ export default function PublicForm({ form }: Props) {
         <>
           {/* Web form fields */}
           <div className="max-w-xl mx-auto px-4 mb-6 space-y-5">
-            {fields.map((field, index) => (
+            {visibleFields.map((field, index) => (
               <motion.div
                 key={field.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -203,6 +255,7 @@ export default function PublicForm({ form }: Props) {
                   onChange={val => setValue(field.id, val)}
                   sigRef={ref => { sigRefs.current[field.id] = ref }}
                   brandColor={form.branding_color}
+                  readOnly={fieldStates.readonly.has(field.id)}
                 />
               </motion.div>
             ))}
@@ -218,7 +271,7 @@ export default function PublicForm({ form }: Props) {
             </div>
           )}
 
-          {fields.length === 0 && (
+          {visibleFields.length === 0 && (
             <div className="max-w-xl mx-auto px-4 mb-6 text-center text-zinc-500">
               No form fields configured yet
             </div>
@@ -244,7 +297,7 @@ export default function PublicForm({ form }: Props) {
 
 // Renders the correct input for each field type (web form mode)
 function FieldInput({
-  field, value, error, onChange, sigRef, brandColor
+  field, value, error, onChange, sigRef, brandColor, readOnly
 }: {
   field: FormField
   value: any
@@ -252,6 +305,7 @@ function FieldInput({
   onChange: (val: any) => void
   sigRef?: (ref: SignatureCanvas | null) => void
   brandColor: string
+  readOnly?: boolean
 }) {
   const baseInput = `w-full bg-white/5 border rounded-xl px-4 py-3 text-white
                      placeholder-zinc-500 focus:outline-none transition-colors text-sm ${
@@ -271,7 +325,8 @@ function FieldInput({
           onChange={e => onChange(e.target.value)}
           placeholder={field.placeholder || ''}
           rows={4}
-          className={baseInput + ' resize-none'}
+          readOnly={readOnly}
+          className={baseInput + ' resize-none' + (readOnly ? ' opacity-60' : '')}
         />
       )}
 
@@ -281,7 +336,8 @@ function FieldInput({
           value={value || ''}
           onChange={e => onChange(e.target.value)}
           placeholder={field.placeholder || ''}
-          className={baseInput}
+          readOnly={readOnly}
+          className={baseInput + (readOnly ? ' opacity-60' : '')}
         />
       )}
 
@@ -290,21 +346,22 @@ function FieldInput({
           type="date"
           value={value || ''}
           onChange={e => onChange(e.target.value)}
-          className={baseInput}
+          readOnly={readOnly}
+          className={baseInput + (readOnly ? ' opacity-60' : '')}
         />
       )}
 
       {field.field_type === 'checkbox' && (
-        <label className="flex items-center gap-3 cursor-pointer group">
+        <label className={'flex items-center gap-3 ' + (readOnly ? '' : 'cursor-pointer group')}>
           <div className={`w-5 h-5 rounded border-2 flex items-center justify-center
                            transition-colors ${
-            value ? 'border-indigo-500 bg-indigo-500' : 'border-white/20 group-hover:border-white/40'
+            value ? 'border-indigo-500 bg-indigo-500' : 'border-white/20' + (readOnly ? '' : ' group-hover:border-white/40')
           }`}
-            onClick={() => onChange(!value)}
+            onClick={() => !readOnly && onChange(!value)}
           >
             {value && <span className="text-white text-xs">\u2713</span>}
           </div>
-          <span className="text-zinc-300 text-sm">{field.label}</span>
+          <span className={'text-sm ' + (readOnly ? 'text-zinc-500' : 'text-zinc-300')}>{field.label}</span>
         </label>
       )}
 
@@ -312,20 +369,19 @@ function FieldInput({
         <div className="space-y-2">
           {field.options.map(option => (
             <label key={option}
-              className="flex items-center gap-3 cursor-pointer p-3 rounded-xl
-                         border border-white/8 hover:border-white/20 transition-colors"
+              className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${readOnly ? 'border-white/5' : 'cursor-pointer border-white/8 hover:border-white/20'}`}
             >
               <div className={`w-4 h-4 rounded-full border-2 flex items-center
                                justify-center transition-colors ${
                 value === option ? 'border-indigo-500' : 'border-white/30'
               }`}
-                onClick={() => onChange(option)}
+                onClick={() => !readOnly && onChange(option)}
               >
                 {value === option && (
                   <div className="w-2 h-2 rounded-full bg-indigo-500" />
                 )}
               </div>
-              <span className="text-zinc-300 text-sm">{option}</span>
+              <span className={'text-sm ' + (readOnly ? 'text-zinc-500' : 'text-zinc-300')}>{option}</span>
             </label>
           ))}
         </div>
@@ -335,7 +391,8 @@ function FieldInput({
         <select
           value={value || ''}
           onChange={e => onChange(e.target.value)}
-          className={baseInput}
+          disabled={readOnly}
+          className={baseInput + (readOnly ? ' opacity-60' : '')}
         >
           <option value="">Select an option...</option>
           {field.options.map(option => (

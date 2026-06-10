@@ -46,6 +46,7 @@ export interface Form {
   created_at: string
   updated_at: string
   form_fields?: FormField[]   // joined when needed
+  form_conditions?: FormCondition[]  // joined when needed
 }
 
 export interface FormField {
@@ -81,6 +82,28 @@ export interface ApiResponse<T = null> {
   data?: T
   error?: string
   code?: string
+}
+
+// =============================================
+// FORM LOGIC / CONDITIONS
+// =============================================
+
+export type ConditionOperator =
+  | 'equals' | 'not_equals' | 'contains'
+  | 'greater_than' | 'less_than'
+  | 'is_empty' | 'is_not_empty'
+
+export type LogicAction = 'show' | 'hide' | 'require' | 'make_readonly'
+
+export interface FormCondition {
+  id: string
+  form_id: string
+  target_field_id: string
+  action: LogicAction
+  operator: ConditionOperator
+  source_field_id: string
+  value: string
+  created_at: string
 }
 
 // =============================================

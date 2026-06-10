@@ -26,7 +26,7 @@ export default async function PublicFormPage({ params }: { params: Promise<{ slu
 
   const { data: form } = await supabase
     .from('forms')
-    .select('*, form_fields(*)')
+    .select('*, form_fields(*), form_conditions(*)')
     .eq('public_slug', slug)
     .eq('is_published', true)
     .order('position', { referencedTable: 'form_fields', ascending: true })

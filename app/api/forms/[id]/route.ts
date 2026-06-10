@@ -13,7 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const { data: form, error } = await supabase
     .from('forms')
-    .select('*, form_fields(*)')
+    .select('*, form_fields(*), form_conditions(*)')
     .eq('id', id)
     .single()
 

@@ -2,10 +2,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Reorder } from "framer-motion";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, GitBranch } from "lucide-react";
 import { toast } from "sonner";
-import type { Form, FormField, FieldType } from "@/types";
+import type { Form, FormField, FormCondition, FieldType } from "@/types";
 import InteractivePdfViewer from "./InteractivePdfViewer";
+import LogicBuilder from "./LogicBuilder";
 
 interface Props {
   initialForm: Form & { form_fields: FormField[] };
@@ -36,6 +37,10 @@ export default function FormEditor({ initialForm }: Props) {
   );
   const [detecting, setDetecting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [conditions, setConditions] = useState<FormCondition[]>(
+    initialForm.form_conditions || [],
+  );
+  const [showLogicBuilder, setShowLogicBuilder] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const selectedField = fields.find((f) => f.id === selectedFieldId) ?? null;
@@ -195,6 +200,13 @@ export default function FormEditor({ initialForm }: Props) {
             }}
           >
             Preview
+          </button>
+          <button
+            onClick={() => setShowLogicBuilder(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium transition-colors bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600/30"
+          >
+            <GitBranch className="w-3.5 h-3.5" />
+            Logic
           </button>
           <button
             onClick={runAiDetection}
@@ -498,6 +510,14 @@ export default function FormEditor({ initialForm }: Props) {
           </div>
         </aside>
       </div>
+      <LogicBuilder
+        formId={form.id}
+        fields={fields}
+        conditions={conditions}
+        onConditionsChange={setConditions}
+        open={showLogicBuilder}
+        onClose={() => setShowLogicBuilder(false)}
+      />
     </div>
   );
 }
